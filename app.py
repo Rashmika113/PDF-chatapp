@@ -52,7 +52,8 @@ with st.sidebar:
     if provider == "ollama":
         st.caption(f"Make sure Ollama is running and you've pulled the model: `ollama pull {model}`")
         st.caption(
-            "Small local models are weak at Sinhala. A larger hosted model (Groq, OpenAI or Claude) usually does much better."
+            "Small local models are weak at Sinhala. "
+            "A larger hosted model (Groq, OpenAI or Claude) usually does much better."
         )
 
     st.header("📄 Documents")
