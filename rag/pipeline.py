@@ -6,6 +6,7 @@ question -> embed -> top-k search -> prompt LLM        (answer)
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import BinaryIO
@@ -21,6 +22,8 @@ from rag.vector_store import SearchResult, VectorStore
 SYSTEM_PROMPT = """You answer questions using only the document excerpts provided.
 
 Rules:
+- Reply in the same language as the question (for example Sinhala or English),
+  even when the excerpts are in a different language.
 - Base every statement on the excerpts.
 - If the excerpts don't contain the answer, say you couldn't find it in the documents.
 - Cite the excerpts you used inline with their tag, for example [1] or [2][3].
@@ -47,7 +50,7 @@ class RAGPipeline:
     ):
         self.config = config
         self.embedder = embedder or SentenceTransformerEmbedder(config.embedding_model)
-        self.store = store or VectorStore(config.chroma_dir)
+        self.store = store or VectorStore(config.chroma_dir, collection=_collection_name(config))
 
     # ---- ingest -------------------------------------------------------
     def ingest(self, file: str | BinaryIO, source: str | None = None) -> int:
@@ -81,3 +84,14 @@ def build_prompt(question: str, sources: list[SearchResult]) -> str:
         for i, s in enumerate(sources, start=1)
     )
     return f"<excerpts>\n{excerpts}\n</excerpts>\n\nQuestion: {question}"
+
+
+def _collection_name(config: Settings) -> str | None:
+    """Name a persisted collection after its embedding model.
+
+    Vectors from different models can't be compared, so switching models starts a fresh index.
+    In-memory stores (no CHROMA_DIR) get a random name per session instead.
+    """
+    if not config.chroma_dir:
+        return None
+    return "docs-" + re.sub(r"[^a-zA-Z0-9._-]", "-", config.embedding_model)[:60]

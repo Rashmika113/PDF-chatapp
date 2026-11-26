@@ -24,8 +24,9 @@ class Settings:
     top_k: int = field(default_factory=lambda: _env_int("TOP_K", 4))
 
     # Embeddings run locally on CPU, so ingestion is free.
+    # Multilingual by default so Sinhala and English documents both work.
     embedding_model: str = field(
-        default_factory=lambda: os.getenv("EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
+        default_factory=lambda: os.getenv("EMBEDDING_MODEL", "intfloat/multilingual-e5-base")
     )
 
     # Where Chroma stores vectors. Empty string = in-memory only.

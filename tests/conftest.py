@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import math
-import re
+from pathlib import Path
 
 import pytest
 from reportlab.lib.pagesizes import letter
@@ -18,7 +18,10 @@ class FakeEmbedder:
 
     def _embed(self, text: str) -> list[float]:
         vec = [0.0] * self.dim
-        for word in re.findall(r"[a-z]+", text.lower()):
+        # Split on whitespace and trim punctuation so this works for Sinhala as well as English.
+        for word in (w.strip(".,?!:;()[]") for w in text.lower().split()):
+            if not word:
+                continue
             vec[int(hashlib.md5(word.encode()).hexdigest(), 16) % self.dim] += 1.0
         norm = math.sqrt(sum(v * v for v in vec)) or 1.0
         return [v / norm for v in vec]
@@ -63,3 +66,9 @@ def sample_pdf(tmp_path):
     c.showPage()
     c.save()
     return path
+
+
+@pytest.fixture
+def sinhala_pdf():
+    """Two Sinhala pages: annual leave (page 1) and laptop password (page 2)."""
+    return Path(__file__).parent / "fixtures" / "sinhala_sample.pdf"

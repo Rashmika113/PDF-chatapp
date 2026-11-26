@@ -67,3 +67,24 @@ def test_get_llm_rejects_unknown_provider():
 
 def test_ollama_needs_no_key():
     assert get_llm("ollama").name == "ollama"
+
+
+def test_sinhala_question_retrieves_sinhala_page(pipeline, sinhala_pdf):
+    pipeline.ingest(sinhala_pdf)
+    [hit] = pipeline.retrieve("මුරපදය වෙනස් කළ යුත්තේ කවදාද?")
+    assert hit.chunk.page_number == 2
+
+
+def test_system_prompt_asks_for_question_language(pipeline, sample_pdf, fake_llm):
+    pipeline.ingest(sample_pdf)
+    "".join(pipeline.answer("නිවාඩු දින කීයද?", fake_llm).tokens)
+    system, _ = fake_llm.calls[0]
+    assert "same language as the question" in system
+
+
+def test_persisted_collection_is_named_after_the_model():
+    from rag.pipeline import _collection_name
+
+    assert _collection_name(Settings(chroma_dir="")) is None
+    name = _collection_name(Settings(chroma_dir="db", embedding_model="intfloat/multilingual-e5-base"))
+    assert name == "docs-intfloat-multilingual-e5-base"

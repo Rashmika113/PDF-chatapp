@@ -51,6 +51,9 @@ with st.sidebar:
         )
     if provider == "ollama":
         st.caption(f"Make sure Ollama is running and you've pulled the model: `ollama pull {model}`")
+        st.caption(
+            "Small local models are weak at Sinhala. A larger hosted model (Groq, OpenAI or Claude) usually does much better."
+        )
 
     st.header("📄 Documents")
     uploads = st.file_uploader("Upload PDFs", type="pdf", accept_multiple_files=True)
@@ -75,7 +78,9 @@ with st.sidebar:
 
 # ---- Main pane: chat ----------------------------------------------------
 st.title("📄 Chat with your PDFs")
-st.caption("Upload documents, ask questions, and get answers with page-level citations.")
+st.caption(
+    "Upload documents, ask questions in English or Sinhala (සිංහල), and get answers with page-level citations."
+)
 
 
 def show_sources(sources: list[dict]) -> None:
@@ -91,7 +96,7 @@ for msg in st.session_state.messages:
         if msg.get("sources"):
             show_sources(msg["sources"])
 
-if question := st.chat_input("Ask a question about your documents"):
+if question := st.chat_input("Ask a question about your documents / ඔබේ ප්‍රශ්නය මෙහි ලියන්න"):
     st.session_state.messages.append({"role": "user", "content": question})
     with st.chat_message("user"):
         st.markdown(question)
